@@ -24,6 +24,13 @@ app.use(require("express-session")({
     saveUninitialized: false
 }));
 
+// MongoDB
+mongoose.connect('mongodb://localhost/Authentication', {useNewUrlParser: true, useUnifiedTopology: true});
+
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "connection error:"));
+db.once("open", function() {console.log("Connected to database.");});
+
 // Express Options: Passport
 app.use(passport.initialize());
 app.use(passport.session());
@@ -31,13 +38,6 @@ app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
-
-// Mongoose
-mongoose.connect('mongodb://localhost/Authentication', {useNewUrlParser: true, useUnifiedTopology: true});
-
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error:"));
-db.once("open", function() {console.log("Connected to database.");});
 
 //========================================================================
 // ROUTES
@@ -55,15 +55,14 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-	var username = req.body.usernameInput;
-	var password = req.body.usernameInput;
-	
-	User.register(new User({username: username}), password, (err, user) => {
+	console.log("Registering.");
+	User.register(new User({username: req.body.username}), req.body.password, (err, user) => {
 		if(err) {
 			console.log(err);
 			res.render("register");
 		} else {
 			passport.authenticate("local")(req, res, () => {
+				console.log("Registered. Redirecting.");
 				res.redirect("/secret");
 			});
 		}
@@ -74,15 +73,16 @@ app.get("/login", (req, res) => {
    res.render("login");
 });
 
-app.post("/login", (req, res) => {
-	var username = req.body.usernameInput;
-	var password = req.body.usernameInput;
-	
-	// Handled by middleware.
-	res.render("login"); // TO BE MOVED
+//
+app.post("/login", passport.authenticate("local", {
+	successRedirect: "/secret",
+	failureRedirect: "/login"
+}), (req, res) => {
+	console.log("Signed in.");
 });
 
 app.get("/logout", (req, res) => {
+	req.logout(); // Destroys all user data in the session.
     res.redirect("/");
 });
 
