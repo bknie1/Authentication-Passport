@@ -61,15 +61,13 @@ app.post("/register", (req, res) => {
 	User.register(new User({username: username}), password, (err, user) => {
 		if(err) {
 			console.log(err);
-			return res.render("register");
+			res.render("register");
 		} else {
 			passport.authenticate("local")(req, res, () => {
 				res.redirect("/secret");
 			});
 		}
 	});
-	
-	res.render("secret");
 });
 
 app.get("/login", (req, res) => {
