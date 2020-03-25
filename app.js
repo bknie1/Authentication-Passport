@@ -46,7 +46,8 @@ app.get("/", function(req, res){
     res.render("home");
 });
 
-app.get("/secret", (req, res) => {
+// If the user is logged in, allow. Otherwise, redirect.
+app.get("/secret", isLoggedIn, (req, res) => {
    res.render("secret"); 
 });
 
@@ -89,7 +90,17 @@ app.get("/logout", (req, res) => {
 app.get("*"), (req, res) => {
 	res.redirect("/");
 }
-
+//========================================================================
+// MIDDLEWARE
+//========================================================================
+function isLoggedIn(req, res, next) {
+	// isAuthenticated comes with Passport.
+	if(req.isAuthenticated()) {
+		return next(); // Next isn't specified, so we just continue.
+	} else {
+		res.redirect("/login");
+	}
+}
 //========================================================================
 // LISTEN
 //========================================================================
